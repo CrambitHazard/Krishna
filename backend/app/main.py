@@ -2,11 +2,13 @@
 KRISHNA — FastAPI application entry-point.
 
 Initialises the app, mounts CORS middleware, wires up routers,
-and exposes a /health endpoint.
+and exposes a /health endpoint. Pre-loads the embedding model and
+FAISS index on startup.
 """
 
 from __future__ import annotations
 
+import logging
 from contextlib import asynccontextmanager
 from typing import AsyncGenerator
 
@@ -18,16 +20,34 @@ from app.api.routes_upload import router as upload_router
 from app.config import settings
 from app.models.schemas import HealthResponse
 
+logger = logging.getLogger(__name__)
+
+# ── configure root logger ──────────────────────────────────────────────
+logging.basicConfig(
+    level=logging.DEBUG if settings.DEBUG else logging.INFO,
+    format="%(asctime)s | %(levelname)-7s | %(name)s | %(message)s",
+)
+
 
 # ── lifespan (startup / shutdown hooks) ────────────────────────────────
 @asynccontextmanager
 async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
     """Execute code on startup and shutdown."""
-    # Startup
-    print(f"🚀 {settings.APP_NAME} v{settings.APP_VERSION} starting …")
+    # ── Startup ─────────────────────────────────────────────────────────
+    logger.info("🚀 %s v%s starting …", settings.APP_NAME, settings.APP_VERSION)
+
+    # Pre-warm singletons so the first request isn't slow
+    from app.core.embeddings import EmbeddingEngine
+    from app.core.vector_store import VectorStore
+
+    EmbeddingEngine.get_instance()
+    VectorStore.get_instance()
+    logger.info("Core singletons ready.")
+
     yield
-    # Shutdown
-    print(f"🛑 {settings.APP_NAME} shutting down …")
+
+    # ── Shutdown ────────────────────────────────────────────────────────
+    logger.info("🛑 %s shutting down …", settings.APP_NAME)
 
 
 # ── app factory ────────────────────────────────────────────────────────

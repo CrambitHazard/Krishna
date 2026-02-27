@@ -1,8 +1,16 @@
 # KRISHNA Backend — Python dependencies
 # ─────────────────────────────────────
+
+# ── Web framework ────────────────────
 fastapi>=0.115.0
 uvicorn[standard]>=0.30.0
 pydantic>=2.0
 pydantic-settings>=2.0
 python-multipart>=0.0.9
 python-dotenv>=1.0.0
+
+# ── RAG pipeline ─────────────────────
+pypdf>=4.0.0
+sentence-transformers>=3.0.0
+faiss-cpu>=1.8.0
+numpy>=1.26.0
