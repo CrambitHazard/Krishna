@@ -94,3 +94,37 @@ class QuizResponse(BaseModel):
     total: int
     metadata: dict[str, Any] = Field(default_factory=dict)
 
+
+# ── Quiz Evaluation ────────────────────────────────────────────────────
+class QuizEvaluateRequest(BaseModel):
+    """User's answers submitted for grading."""
+    user_answers: list[str] = Field(
+        ...,
+        min_length=1,
+        description="List of user answers, e.g. ['A', 'C', 'B', 'D', 'A']",
+    )
+    quiz_data: list[QuizQuestionSchema] = Field(
+        ...,
+        min_length=1,
+        description="The original quiz questions to evaluate against.",
+    )
+
+
+class QuestionFeedbackSchema(BaseModel):
+    """Per-question feedback after evaluation."""
+    question: str
+    options: list[str]
+    user_answer: str
+    correct_answer: str
+    is_correct: bool
+    explanation: str
+
+
+class QuizEvaluateResponse(BaseModel):
+    """Evaluation result with score and per-question feedback."""
+    score: int
+    total: int
+    percentage: float
+    correct_questions: list[QuestionFeedbackSchema]
+    incorrect_questions: list[QuestionFeedbackSchema]
+
