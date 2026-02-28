@@ -51,9 +51,14 @@ async def generate_quiz(payload: QuizRequest) -> QuizResponse:
         ) from exc
 
     if not result.questions:
+        error_reason = result.metadata.get("error", "LLM returned unparseable output.")
+        logger.error(
+            "Quiz generation returned 0 questions for '%s': %s",
+            payload.topic[:80], error_reason,
+        )
         raise HTTPException(
             status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-            detail="Failed to generate quiz questions. Please try again.",
+            detail=f"Failed to generate quiz questions: {error_reason}",
         )
 
     return QuizResponse(

@@ -141,14 +141,26 @@ class QuizAgent:
         # Parse the LLM output into structured questions
         questions = self._parse_response(raw)
 
+        metadata: dict[str, Any] = {
+            "had_context": bool(context),
+            "requested": num_questions,
+            "generated": len(questions),
+        }
+
+        # If parsing failed, include the raw output for debugging
+        if not questions:
+            logger.error(
+                "QuizAgent: parsed 0 questions from LLM output: %s", raw[:500]
+            )
+            metadata["error"] = (
+                f"LLM responded but output could not be parsed. "
+                f"Raw (first 300 chars): {raw[:300]}"
+            )
+
         return QuizResult(
             topic=topic,
             questions=questions,
-            metadata={
-                "had_context": bool(context),
-                "requested": num_questions,
-                "generated": len(questions),
-            },
+            metadata=metadata,
         )
 
     # ── prompt construction ─────────────────────────────────────────────

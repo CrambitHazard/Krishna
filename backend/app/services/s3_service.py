@@ -48,15 +48,16 @@ class S3Service:
         self._bucket = settings.S3_BUCKET_NAME
         self._region = settings.AWS_REGION
 
-        # Build the boto3 client — credentials come from env vars
-        # (AWS_ACCESS_KEY_ID / AWS_SECRET_ACCESS_KEY) which boto3
-        # picks up automatically, or from explicit settings.
-        self._client = boto3.client(
-            "s3",
-            region_name=self._region,
-            aws_access_key_id=settings.AWS_ACCESS_KEY_ID or None,
-            aws_secret_access_key=settings.AWS_SECRET_ACCESS_KEY or None,
-        )
+        # Build the boto3 client.
+        # If explicit keys are in .env, use them.
+        # Otherwise, let boto3 auto-discover from IAM instance role,
+        # environment, or ~/.aws/credentials.
+        client_kwargs: dict = {"region_name": self._region}
+        if settings.AWS_ACCESS_KEY_ID and settings.AWS_SECRET_ACCESS_KEY:
+            client_kwargs["aws_access_key_id"] = settings.AWS_ACCESS_KEY_ID
+            client_kwargs["aws_secret_access_key"] = settings.AWS_SECRET_ACCESS_KEY
+
+        self._client = boto3.client("s3", **client_kwargs)
 
         if not self._bucket:
             logger.warning(
@@ -67,12 +68,8 @@ class S3Service:
     # ── properties ──────────────────────────────────────────────────────
     @property
     def is_configured(self) -> bool:
-        """Return True if bucket name and credentials are set."""
-        return bool(
-            self._bucket
-            and settings.AWS_ACCESS_KEY_ID
-            and settings.AWS_SECRET_ACCESS_KEY
-        )
+        """Return True if bucket name is set. Credentials may come from IAM role."""
+        return bool(self._bucket)
 
     # ── upload ──────────────────────────────────────────────────────────
     async def upload_file(

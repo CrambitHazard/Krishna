@@ -1,17 +1,30 @@
 """
-KRISHNA — FAISS vector store.
+KRISHNA — FAISS vector store with disk persistence.
 
-Provides an in-memory FAISS index with metadata bookkeeping so we can
+Provides a FAISS index with metadata bookkeeping so we can
 map vector IDs back to the original text chunks plus their metadata.
 
 The index uses inner-product search (IndexFlatIP) — because the
 EmbeddingEngine already L2-normalises its output, IP == cosine similarity.
+
+Persistence
+-----------
+The index and chunk records are saved to disk after every write.
+On startup, if a saved index exists, it is loaded automatically —
+so uploaded documents survive server restarts.
+
+Storage layout (inside DATA_DIR):
+    faiss_index/
+        index.bin        ← the FAISS binary index
+        records.json     ← chunk texts + metadata
 """
 
 from __future__ import annotations
 
+import json
 import logging
 from dataclasses import dataclass, field
+from pathlib import Path
 from typing import Any
 
 import faiss
@@ -21,6 +34,11 @@ from app.core.embeddings import EmbeddingEngine
 
 logger = logging.getLogger(__name__)
 
+# ── persistence directory ───────────────────────────────────────────────
+_DATA_DIR = Path(__file__).resolve().parents[2] / "data" / "faiss_index"
+_INDEX_PATH = _DATA_DIR / "index.bin"
+_RECORDS_PATH = _DATA_DIR / "records.json"
+
 
 @dataclass
 class ChunkRecord:
@@ -29,18 +47,41 @@ class ChunkRecord:
     text: str
     metadata: dict[str, Any] = field(default_factory=dict)
 
+    def to_dict(self) -> dict[str, Any]:
+        return {
+            "chunk_id": self.chunk_id,
+            "text": self.text,
+            "metadata": self.metadata,
+        }
+
+    @classmethod
+    def from_dict(cls, d: dict[str, Any]) -> ChunkRecord:
+        return cls(
+            chunk_id=d["chunk_id"],
+            text=d["text"],
+            metadata=d.get("metadata", {}),
+        )
+
 
 class VectorStore:
-    """In-memory FAISS index with chunk metadata."""
+    """FAISS index with chunk metadata and disk persistence."""
 
     _instance: VectorStore | None = None
 
     def __init__(self, dimension: int | None = None) -> None:
         dim = dimension or EmbeddingEngine.dimension()
+        self._dim = dim
         self._index: faiss.IndexFlatIP = faiss.IndexFlatIP(dim)
         self._records: list[ChunkRecord] = []
         self._next_id: int = 0
-        logger.info("FAISS VectorStore initialised (dim=%d).", dim)
+
+        # Try to load existing index from disk
+        self._load()
+
+        logger.info(
+            "FAISS VectorStore ready (dim=%d, chunks=%d).",
+            dim, self._index.ntotal,
+        )
 
     # ── singleton accessor ──────────────────────────────────────────────
     @classmethod
@@ -56,14 +97,8 @@ class VectorStore:
         metadatas: list[dict[str, Any]] | None = None,
     ) -> list[int]:
         """
-        Embed *chunks*, add them to the FAISS index, and store metadata.
-
-        Parameters
-        ----------
-        chunks : list[str]
-            Text segments to index.
-        metadatas : list[dict] | None
-            Optional per-chunk metadata (e.g. filename, page number).
+        Embed *chunks*, add them to the FAISS index, store metadata,
+        and persist to disk.
 
         Returns
         -------
@@ -93,6 +128,10 @@ class VectorStore:
         logger.info(
             "Added %d chunks to index (total=%d).", len(chunks), self._index.ntotal
         )
+
+        # Persist after every write
+        self._save()
+
         return ids
 
     # ── read ────────────────────────────────────────────────────────────
@@ -136,3 +175,60 @@ class VectorStore:
     def total_chunks(self) -> int:
         """Return the number of vectors currently in the index."""
         return self._index.ntotal
+
+    # ── persistence ─────────────────────────────────────────────────────
+    def _save(self) -> None:
+        """Save the FAISS index and chunk records to disk."""
+        try:
+            _DATA_DIR.mkdir(parents=True, exist_ok=True)
+
+            # Save FAISS index
+            faiss.write_index(self._index, str(_INDEX_PATH))
+
+            # Save records as JSON
+            records_data = {
+                "next_id": self._next_id,
+                "records": [r.to_dict() for r in self._records],
+            }
+            _RECORDS_PATH.write_text(
+                json.dumps(records_data, ensure_ascii=False),
+                encoding="utf-8",
+            )
+
+            logger.debug(
+                "Saved FAISS index (%d vectors) and %d records to %s.",
+                self._index.ntotal, len(self._records), _DATA_DIR,
+            )
+        except Exception as exc:
+            logger.error("Failed to save FAISS index to disk: %s", exc)
+
+    def _load(self) -> None:
+        """Load the FAISS index and chunk records from disk (if they exist)."""
+        if not _INDEX_PATH.exists() or not _RECORDS_PATH.exists():
+            logger.info("No saved FAISS index found — starting fresh.")
+            return
+
+        try:
+            # Load FAISS index
+            self._index = faiss.read_index(str(_INDEX_PATH))
+
+            # Load records
+            raw = _RECORDS_PATH.read_text(encoding="utf-8")
+            data = json.loads(raw)
+            self._next_id = data.get("next_id", 0)
+            self._records = [
+                ChunkRecord.from_dict(r) for r in data.get("records", [])
+            ]
+
+            logger.info(
+                "Loaded FAISS index from disk: %d vectors, %d records.",
+                self._index.ntotal, len(self._records),
+            )
+        except Exception as exc:
+            logger.error(
+                "Failed to load FAISS index from disk: %s — starting fresh.", exc
+            )
+            dim = self._dim
+            self._index = faiss.IndexFlatIP(dim)
+            self._records = []
+            self._next_id = 0
