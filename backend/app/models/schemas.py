@@ -68,3 +68,29 @@ class ChatResponse(BaseModel):
     session_id: str
     agent: str = "orchestrator"
     metadata: dict[str, Any] = Field(default_factory=dict)
+
+
+# ── Quiz ────────────────────────────────────────────────────────────────
+class QuizQuestionSchema(BaseModel):
+    """A single MCQ question."""
+    question: str
+    options: list[str]
+    correct_answer: str
+    explanation: str
+
+
+class QuizRequest(BaseModel):
+    topic: str = Field(..., min_length=1, max_length=1024)
+    num_questions: int = Field(default=5, ge=3, le=5)
+    use_context: bool = Field(
+        default=True,
+        description="If true, ground questions on uploaded documents.",
+    )
+
+
+class QuizResponse(BaseModel):
+    topic: str
+    questions: list[QuizQuestionSchema]
+    total: int
+    metadata: dict[str, Any] = Field(default_factory=dict)
+
