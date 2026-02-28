@@ -41,9 +41,9 @@ class Settings(BaseSettings):
     # ── CORS ───────────────────────────────────────────────────────────
     CORS_ORIGINS: list[str] = ["*"]
 
-    # ── LLM provider (placeholder) ─────────────────────────────────────
-    OPENAI_API_KEY: str = ""
-    LLM_MODEL: str = "gpt-4o"
+    # ── LLM provider (OpenRouter) ───────────────────────────────────────
+    OPENROUTER_API_KEY: str = ""
+    OPENROUTER_MODEL: str = "openai/gpt-4o"
 
     # ── AWS / S3 (placeholder) ─────────────────────────────────────────
     AWS_ACCESS_KEY_ID: str = ""
