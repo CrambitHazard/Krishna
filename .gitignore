@@ -59,3 +59,7 @@ desktop.ini
 
 # ── Data (FAISS index, uploads) ──────────────────────────────────────
 data/
+
+
+_test_suite.py
+_test_output.txt

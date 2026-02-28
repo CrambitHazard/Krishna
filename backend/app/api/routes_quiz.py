@@ -1,15 +1,17 @@
 """
 KRISHNA — Quiz routes.
 
-POST /quiz       — generate a multiple-choice quiz on a topic.
-POST /quiz/evaluate — evaluate user answers and return score + feedback.
+POST /quiz            — generate a multiple-choice quiz on a topic.
+POST /quiz/evaluate   — evaluate user answers and return score + feedback.
+GET  /quiz/progress   — retrieve learning progress.
 """
 
 from __future__ import annotations
 
 import logging
+import uuid
 
-from fastapi import APIRouter, HTTPException, status
+from fastapi import APIRouter, HTTPException, Query, status
 
 from app.models.schemas import (
     QuestionFeedbackSchema,
@@ -19,6 +21,7 @@ from app.models.schemas import (
     QuizRequest,
     QuizResponse,
 )
+from app.services.database_service import DatabaseService
 from app.services.quiz_service import QuizService
 
 logger = logging.getLogger(__name__)
@@ -26,6 +29,7 @@ logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/quiz", tags=["Quiz"])
 
 _quiz_service = QuizService()
+_db = DatabaseService()
 
 
 # ── POST /quiz — generate quiz ─────────────────────────────────────────
@@ -112,6 +116,26 @@ async def evaluate_quiz(payload: QuizEvaluateRequest) -> QuizEvaluateResponse:
         quiz_data=quiz_dicts,
     )
 
+    # ── Persist to database (fire-and-forget) ───────────────────────
+    topic = quiz_dicts[0].get("question", "unknown")[:60] if quiz_dicts else "unknown"
+    # Use a proper topic if one was embedded in the request
+    session_id = str(uuid.uuid4())
+    try:
+        await _db.save_quiz_attempt(
+            session_id=session_id,
+            topic=topic,
+            score=result.score,
+            total=result.total,
+            details=result.to_dict(),
+        )
+        await _db.update_progress(
+            topic=topic,
+            score=result.score,
+            total=result.total,
+        )
+    except Exception as exc:
+        logger.warning("Failed to persist quiz attempt: %s", exc)
+
     return QuizEvaluateResponse(
         score=result.score,
         total=result.total,
@@ -139,3 +163,17 @@ async def evaluate_quiz(payload: QuizEvaluateRequest) -> QuizEvaluateResponse:
             for q in result.incorrect_questions
         ],
     )
+
+
+# ── GET /quiz/progress — learning progress ─────────────────────────────
+@router.get(
+    "/progress",
+    status_code=status.HTTP_200_OK,
+    summary="Get learning progress",
+    description="Retrieve per-topic learning progress (accuracy, attempts).",
+)
+async def get_progress(
+    topic: str | None = Query(None, description="Filter by topic"),
+) -> list[dict]:
+    """Return progress for a specific topic or all topics."""
+    return await _db.get_progress(topic=topic)
