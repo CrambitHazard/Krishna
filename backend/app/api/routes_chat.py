@@ -1,67 +1,78 @@
 """
 KRISHNA — Chat routes.
 
-Handles the conversational AI endpoints. The orchestrator agent
-decides which sub-agent answers — for now we return a dummy reply,
-enriched with retrieved context when documents are available.
+Handles the conversational AI endpoints.  The /chat endpoint now
+delegates to the full multi-agent pipeline:
+
+    Orchestrator → Planner → Retrieval → Teacher → Response
 """
 
 from __future__ import annotations
 
+import logging
 import uuid
 
-from fastapi import APIRouter, status
+from fastapi import APIRouter, HTTPException, status
 
+from app.agents.orchestrator import Orchestrator
 from app.models.schemas import (
     ChatRequest,
     ChatResponse,
+    RetrievalChunk,
     RetrievalRequest,
     RetrievalResponse,
-    RetrievalChunk,
+    SourceReference,
 )
 from app.services.retrieval_service import RetrievalService
 
+logger = logging.getLogger(__name__)
+
 router = APIRouter(prefix="/chat", tags=["Chat"])
 
+# ── shared singletons ──────────────────────────────────────────────────
+_orchestrator = Orchestrator()
 _retrieval = RetrievalService()
 
 
+# ── POST /chat — full multi-agent pipeline ─────────────────────────────
 @router.post(
     "/",
     response_model=ChatResponse,
     status_code=status.HTTP_200_OK,
     summary="Send a chat message",
-    description="Sends a message to the AI tutor and receives a response.",
+    description=(
+        "Sends a message through the multi-agent pipeline: "
+        "Planner retrieves context → Teacher generates a grounded answer."
+    ),
 )
 async def chat(payload: ChatRequest) -> ChatResponse:
-    """Placeholder — echoes the question back with a stub reply."""
+    """Run the full Orchestrator → Planner → Teacher pipeline."""
     session_id = payload.session_id or str(uuid.uuid4())
 
-    # Retrieve relevant context if documents have been indexed
-    context_snippets: list[str] = []
     try:
-        results = await _retrieval.search(payload.message, top_k=3)
-        context_snippets = [r["text"][:200] for r in results]
-    except Exception:
-        pass
-
-    reply = f"[KRISHNA stub] You asked: '{payload.message}'."
-    if context_snippets:
-        reply += f" Found {len(context_snippets)} relevant chunk(s)."
-    else:
-        reply += " No documents indexed yet — upload a PDF first!"
+        result = await _orchestrator.handle(payload.query)
+    except Exception as exc:
+        logger.exception("Agent pipeline failed for '%s'", payload.query[:80])
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Agent pipeline error: {exc}",
+        ) from exc
 
     return ChatResponse(
-        reply=reply,
+        answer=result.answer,
+        sources=[
+            SourceReference(**src) for src in result.sources
+        ],
         session_id=session_id,
-        agent="orchestrator",
+        agent=result.agent,
         metadata={
+            **result.metadata,
             "document_id": payload.document_id,
-            "context_chunks": len(context_snippets),
         },
     )
 
 
+# ── POST /chat/retrieve — direct semantic search ──────────────────────
 @router.post(
     "/retrieve",
     response_model=RetrievalResponse,

@@ -46,15 +46,25 @@ class RetrievalResponse(BaseModel):
     total: int
 
 
-# ── Chat ────────────────────────────────────────────────────────────────
+# ── Chat (multi-agent pipeline) ────────────────────────────────────────
 class ChatRequest(BaseModel):
-    message: str = Field(..., min_length=1, max_length=4096)
+    query: str = Field(..., min_length=1, max_length=4096)
     session_id: str | None = None
     document_id: str | None = None
 
 
+class SourceReference(BaseModel):
+    """A single source chunk used to ground the answer."""
+    chunk_index: int | None = None
+    filename: str = "unknown"
+    document_id: str = ""
+    score: float = 0.0
+
+
 class ChatResponse(BaseModel):
-    reply: str
+    """Structured output from the multi-agent pipeline."""
+    answer: str
+    sources: list[SourceReference] = Field(default_factory=list)
     session_id: str
     agent: str = "orchestrator"
     metadata: dict[str, Any] = Field(default_factory=dict)
