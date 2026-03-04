@@ -13,25 +13,49 @@ interface ChatSession {
     id: string;
     title: string;
     date: string;
+    messages: Message[];
+    documents: string[];
+    quizzes: any[]; // placeholder for quiz data
 }
 
-const MOCK_CHATS: ChatSession[] = [
-    { id: '1', title: 'Vedantic Philosophy', date: 'Today' },
-    { id: '2', title: 'Calculus: Derivatives', date: 'Yesterday' },
-    { id: '3', title: 'World War II Timeline', date: 'Previous 7 Days' }
+// Initial mock state
+const INITIAL_CHATS: ChatSession[] = [
+    {
+        id: '1',
+        title: 'Vedantic Philosophy',
+        date: 'Today',
+        messages: [
+            { role: 'assistant', content: 'Greetings. I am Krishna. We can discuss the Bhagavad Gita and Vedantic principles based on your uploads.' },
+            { role: 'user', content: 'What is Dharma?' },
+            { role: 'assistant', content: 'In the context of your uploaded text, Dharma refers to righteous duty. It is the path one must follow to maintain cosmic order and personal integrity.' }
+        ],
+        documents: ['Bhagavad_Gita_Notes.pdf', 'Upanishads_Summary.docx'],
+        quizzes: [{ title: 'The Nature of Duty', questions: 5, status: 'Needs Review' }]
+    },
+    {
+        id: '2',
+        title: 'Calculus: Derivatives',
+        date: 'Yesterday',
+        messages: [
+            { role: 'assistant', content: 'I am ready to assist with your Calculus materials. What concept needs clarity?' }
+        ],
+        documents: ['Calculus_Chapter_2.pdf'],
+        quizzes: []
+    }
 ];
 
 export default function AppPage() {
     const [activeTab, setActiveTab] = useState<Tab>('chat');
     const [isSidebarOpen, setSidebarOpen] = useState(false);
-    const [activeChatId, setActiveChatId] = useState<string>('1');
 
-    // Chat State
+    // App State
+    const [chats, setChats] = useState<ChatSession[]>(INITIAL_CHATS);
+    const [activeChatId, setActiveChatId] = useState<string>('1');
     const [input, setInput] = useState('');
-    const [messages, setMessages] = useState<Message[]>([
-        { role: 'assistant', content: 'Greetings. I am Krishna. What knowledge seek you from your materials today?' }
-    ]);
+
     const messagesEndRef = useRef<HTMLDivElement>(null);
+
+    const activeChat = chats.find(c => c.id === activeChatId) || chats[0];
 
     const scrollToBottom = () => {
         messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -39,29 +63,64 @@ export default function AppPage() {
 
     useEffect(() => {
         scrollToBottom();
-    }, [messages]);
+    }, [activeChat?.messages]);
+
+    const handleNewChat = () => {
+        const newChatId = Date.now().toString();
+        const newChat: ChatSession = {
+            id: newChatId,
+            title: 'New Conversation',
+            date: 'Today',
+            messages: [{ role: 'assistant', content: 'Greetings. I am Krishna. What knowledge seek you from your materials today?' }],
+            documents: [],
+            quizzes: []
+        };
+        setChats(prev => [newChat, ...prev]);
+        setActiveChatId(newChatId);
+        setActiveTab('chat');
+        if (window.innerWidth < 1024) setSidebarOpen(false);
+    };
 
     const handleSend = (e: React.FormEvent) => {
         e.preventDefault();
-        if (!input.trim()) return;
+        if (!input.trim() || !activeChat) return;
 
         const userMessage = input;
-        setMessages(prev => [...prev, { role: 'user', content: userMessage }]);
+
+        // Update local state: add user message
+        setChats(prev => prev.map(chat => {
+            if (chat.id === activeChatId) {
+                // Update title based on first message if it's "New Conversation"
+                const title = (chat.title === 'New Conversation' && userMessage.length > 3)
+                    ? userMessage.substring(0, 30) + '...'
+                    : chat.title;
+                return { ...chat, title, messages: [...chat.messages, { role: 'user', content: userMessage }] };
+            }
+            return chat;
+        }));
         setInput('');
 
         // Simulate AI response
         setTimeout(() => {
-            setMessages(prev => [...prev, {
-                role: 'assistant',
-                content: 'I understand your inquiry. Based on the sacred texts and materials you provided, the essence lies within the foundational principles we previously uploaded. Let me guide you clearly...'
-            }]);
+            setChats(prev => prev.map(chat => {
+                if (chat.id === activeChatId) {
+                    return {
+                        ...chat,
+                        messages: [...chat.messages, {
+                            role: 'assistant',
+                            content: 'I comprehend your inquiry. Based on the sacred texts and materials provided to me, the essence lies within the foundational principles we uploaded. Let me guide you clearly...'
+                        }]
+                    };
+                }
+                return chat;
+            }));
         }, 1200);
     };
 
     const renderChat = () => (
         <div className="app-chat-view">
             <div className="chat-messages-container">
-                {messages.map((msg, i) => (
+                {activeChat?.messages.map((msg, i) => (
                     <div key={i} className={`chat-message-row ${msg.role}`}>
                         <div className="chat-avatar">
                             {msg.role === 'assistant' ? 'K' : 'U'}
@@ -76,7 +135,9 @@ export default function AppPage() {
 
             <div className="chat-input-area">
                 <form className="chat-input-box" onSubmit={handleSend}>
-                    <button type="button" className="attach-btn" title="Upload Document"><Paperclip size={20} /></button>
+                    <button type="button" className="attach-btn" title="Upload Document" onClick={() => setActiveTab('knowledge')}>
+                        <Paperclip size={20} />
+                    </button>
                     <input
                         type="text"
                         placeholder="Seek guidance from Krishna..."
@@ -85,7 +146,7 @@ export default function AppPage() {
                     />
                     <button type="submit" className="send-btn" disabled={!input.trim()}><Send size={18} /></button>
                 </form>
-                <p className="chat-footer-text">Krishna only references your uploaded documents. Absolute fidelity.</p>
+                <p className="chat-footer-text">Krishna only references your uploaded documents for <b>"{activeChat?.title}"</b>.</p>
             </div>
         </div>
     );
@@ -94,7 +155,7 @@ export default function AppPage() {
         <div className="app-content-view">
             <div className="content-header">
                 <h1 className="content-title">Knowledgebase</h1>
-                <p className="content-subtitle">Manage the documents specific to this conversation.</p>
+                <p className="content-subtitle">Files isolated to the context of <b>"{activeChat?.title}"</b>.</p>
             </div>
 
             <div className="upload-dropzone">
@@ -105,17 +166,23 @@ export default function AppPage() {
             </div>
 
             <div className="uploaded-list">
-                <h4 className="list-title">Active Materials in this Chat</h4>
-                <div className="uploaded-file">
-                    <div className="file-info-group">
-                        <FileText size={24} className="file-icon" />
-                        <div className="file-info">
-                            <span className="file-name">Complete_Syllabus_Notes.pdf</span>
-                            <span className="file-meta">1.2 MB • Indexed</span>
+                <h4 className="list-title">Active Materials in this Chat ({activeChat?.documents.length || 0})</h4>
+                {activeChat?.documents.length === 0 ? (
+                    <p style={{ color: 'var(--text-secondary)', marginTop: '1rem' }}>No documents uploaded for this chat yet.</p>
+                ) : (
+                    activeChat?.documents.map((doc, idx) => (
+                        <div key={idx} className="uploaded-file">
+                            <div className="file-info-group">
+                                <FileText size={24} className="file-icon" />
+                                <div className="file-info">
+                                    <span className="file-name">{doc}</span>
+                                    <span className="file-meta">Indexed for Retrieval</span>
+                                </div>
+                            </div>
+                            <CheckCircle size={24} className="file-status active" />
                         </div>
-                    </div>
-                    <CheckCircle size={24} className="file-status active" />
-                </div>
+                    ))
+                )}
             </div>
         </div>
     );
@@ -124,21 +191,22 @@ export default function AppPage() {
         <div className="app-content-view">
             <div className="content-header">
                 <h1 className="content-title">Mastery Quizzes</h1>
-                <p className="content-subtitle">Quizzes generated for the topics discussed in this thread.</p>
+                <p className="content-subtitle">Quizzes generated for <b>"{activeChat?.title}"</b>.</p>
             </div>
 
             <div className="tests-grid">
-                <div className="test-card">
-                    <h4>Chapter 1: Core Concepts</h4>
-                    <p className="test-meta">10 Questions • Needs Review</p>
-                    <button className="secondary-btn">Retake Quiz</button>
-                </div>
-                <div className="test-card">
-                    <h4>The Nature of Duty</h4>
-                    <p className="test-meta">5 Questions • Excellent</p>
-                    <button className="secondary-btn">Review Answers</button>
-                </div>
-                <button className="create-test-card">
+                {activeChat?.quizzes.length === 0 ? (
+                    <p style={{ color: 'var(--text-secondary)', gridColumn: '1 / -1' }}>No quizzes generated for this thread yet.</p>
+                ) : (
+                    activeChat?.quizzes.map((quiz, idx) => (
+                        <div key={idx} className="test-card">
+                            <h4>{quiz.title}</h4>
+                            <p className="test-meta">{quiz.questions} Questions • {quiz.status}</p>
+                            <button className="secondary-btn">Review</button>
+                        </div>
+                    ))
+                )}
+                <button className="create-test-card" onClick={() => alert('Quiz generation simulation')}>
                     <Target size={32} className="create-test-icon" />
                     <span>Generate New Quiz</span>
                 </button>
@@ -151,7 +219,7 @@ export default function AppPage() {
             {/* Sidebar (ChatGPT Style Chat History) */}
             <aside className={`product-sidebar ${isSidebarOpen ? 'open' : ''}`}>
                 <div className="sidebar-header">
-                    <button className="new-chat-btn">
+                    <button className="new-chat-btn" onClick={handleNewChat}>
                         <Plus size={20} /> New Chat
                     </button>
                     <button onClick={() => setSidebarOpen(false)} className="close-sidebar mobile-only">
@@ -161,8 +229,8 @@ export default function AppPage() {
 
                 <div className="sidebar-history">
                     <div className="history-group">
-                        <span className="history-label">Recent</span>
-                        {MOCK_CHATS.map(chat => (
+                        <span className="history-label">Recent Conversations</span>
+                        {chats.map(chat => (
                             <button
                                 key={chat.id}
                                 className={`history-item ${activeChatId === chat.id ? 'active' : ''}`}
@@ -199,8 +267,8 @@ export default function AppPage() {
                             <Menu size={24} />
                         </button>
                         <div className="topbar-context desktop-only">
-                            <span className="context-label">Krishna</span>
-                            <span className="context-title">{MOCK_CHATS.find(c => c.id === activeChatId)?.title || 'New Chat'}</span>
+                            <span className="context-label">Krishna AI</span>
+                            <span className="context-title">{activeChat?.title || 'New Chat'}</span>
                         </div>
                     </div>
 
@@ -226,7 +294,7 @@ export default function AppPage() {
                     </div>
 
                     <div className="topbar-right">
-                        {/* Empty placeholder to balance layout, or future settings icon */}
+                        {/* Balance flex header */}
                     </div>
                 </header>
 

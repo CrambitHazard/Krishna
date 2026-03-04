@@ -1,5 +1,5 @@
 import React from 'react';
-import { NavLink } from 'react-router-dom';
+// NavLink and React Router is no longer needed here since we use anchor tags
 import { UploadCloud, MessageSquare, Target, Activity } from 'lucide-react';
 import './Navbars.css';
 
@@ -9,20 +9,20 @@ export const DesktopNav: React.FC = () => {
             <nav className="nav-desktop">
                 <div className="nav-brand">KRISHNA</div>
                 <div className="nav-links">
-                    <NavLink to="/upload" className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}>
+                    <a href="/home#upload" className="nav-link">
                         <span>01</span> Upload
-                    </NavLink>
-                    <NavLink to="/chat" className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}>
+                    </a>
+                    <a href="/home#chat" className="nav-link">
                         <span>02</span> Chat
-                    </NavLink>
-                    <NavLink to="/quiz" className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}>
+                    </a>
+                    <a href="/home#quiz" className="nav-link">
                         <span>03</span> Quiz
-                    </NavLink>
+                    </a>
                 </div>
-                <NavLink to="/analytics" className={({ isActive }) => `nav-btn ${isActive ? 'active-btn' : ''}`}>
+                <a href="/home#analytics" className="nav-btn">
                     <div className="btn-circle"></div>
                     <span className="btn-text">Progress</span>
-                </NavLink>
+                </a>
             </nav>
         </div>
     );
@@ -31,18 +31,18 @@ export const DesktopNav: React.FC = () => {
 export const MobileNav: React.FC = () => {
     return (
         <div className="mobile-only nav-mobile-bottom">
-            <NavLink to="/upload" className={({ isActive }) => `mob-tab ${isActive ? 'active-tab' : ''}`}>
-                {({ isActive }) => <UploadCloud size={24} strokeWidth={isActive ? 2.5 : 1.5} />}
-            </NavLink>
-            <NavLink to="/chat" className={({ isActive }) => `mob-tab ${isActive ? 'active-tab' : ''}`}>
-                {({ isActive }) => <MessageSquare size={24} strokeWidth={isActive ? 2.5 : 1.5} />}
-            </NavLink>
-            <NavLink to="/quiz" className={({ isActive }) => `mob-tab ${isActive ? 'active-tab' : ''}`}>
-                {({ isActive }) => <Target size={24} strokeWidth={isActive ? 2.5 : 1.5} />}
-            </NavLink>
-            <NavLink to="/analytics" className={({ isActive }) => `mob-tab active-mob-portal ${isActive ? 'active-tab' : ''}`}>
-                {({ isActive }) => <Activity size={24} strokeWidth={2.5} color={isActive ? '#000' : 'var(--accent-color)'} />}
-            </NavLink>
+            <a href="/home#upload" className="mob-tab">
+                <UploadCloud size={24} strokeWidth={1.5} />
+            </a>
+            <a href="/home#chat" className="mob-tab">
+                <MessageSquare size={24} strokeWidth={1.5} />
+            </a>
+            <a href="/home#quiz" className="mob-tab">
+                <Target size={24} strokeWidth={1.5} />
+            </a>
+            <a href="/home#analytics" className="mob-tab active-mob-portal">
+                <Activity size={24} strokeWidth={2.5} color={'var(--accent-color)'} />
+            </a>
         </div>
     );
 };
