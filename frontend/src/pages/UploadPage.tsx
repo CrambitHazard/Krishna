@@ -1,7 +1,8 @@
 import React from 'react';
+import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import type { Variants } from 'framer-motion';
-import { Book, Sparkles, Navigation, ShieldCheck } from 'lucide-react';
+import { Book, Sparkles, Navigation, ShieldCheck, ChevronRight } from 'lucide-react';
 import './UploadPage.css';
 
 const fadeUp: Variants = {
@@ -18,6 +19,7 @@ const fadeUp: Variants = {
 };
 
 const UploadPage: React.FC = () => {
+    const navigate = useNavigate();
     return (
         <div className="upload-view">
             {/* The Hook (Hero) */}
@@ -47,14 +49,16 @@ const UploadPage: React.FC = () => {
                 <motion.button
                     className="hero-cta desktop-only"
                     initial="hidden" animate="visible" custom={3} variants={fadeUp}
+                    onClick={() => navigate('/app')}
                 >
-                    <Book size={20} /> UPLOAD DOCUMENTS
+                    <Book size={20} /> LAUNCH KRISHNA APP <ChevronRight size={20} />
                 </motion.button>
                 <motion.button
                     className="hero-cta mobile-only"
                     initial="hidden" animate="visible" custom={3} variants={fadeUp}
+                    onClick={() => navigate('/app')}
                 >
-                    <Book size={20} /> UPLOAD
+                    <Book size={20} /> LAUNCH APP
                 </motion.button>
 
                 {/* Custom scroll affordance */}
