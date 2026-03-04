@@ -1,0 +1,180 @@
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;600;700&family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400&display=swap');
+
+:root {
+  /* Krishna Theme: Midnight Blue (Depth/Divinity) and Warm Gold (Wisdom/Enlightenment) */
+  --bg-dark: #020612; /* Deep midnight blue */
+  --bg-surface: #081226; 
+  --text-primary: #fbfdff; /* Starlight white */
+  --text-secondary: #8b9bb4;
+  --accent-color: #fbd34d; /* Warm Gold */
+  --accent-secondary: #3b82f6; /* Peacock Blue Accent */
+  --accent-glow: rgba(251, 211, 77, 0.3);
+  --border-color: rgba(255, 255, 255, 0.08);
+  --border-glow: rgba(251, 211, 77, 0.15);
+  
+  --font-display: 'Playfair Display', serif; /* Elegant, wise, classic for headers */
+  --font-body: 'Plus Jakarta Sans', sans-serif; /* Clean, modern, legible for UI/body */
+  
+  --ease-spring: cubic-bezier(0.175, 0.885, 0.32, 1.1);
+  --ease-fluid: cubic-bezier(0.25, 1, 0.5, 1);
+  --ease-snap: cubic-bezier(0.16, 1, 0.3, 1);
+  
+  --nav-height-desktop: 80px;
+  --nav-height-mobile: 80px;
+}
+
+body, html {
+  margin: 0;
+  padding: 0;
+  background-color: var(--bg-dark);
+  color: var(--text-primary);
+  font-family: var(--font-body);
+  background-attachment: fixed;
+  overflow-x: hidden;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  scroll-behavior: smooth;
+}
+
+/* ── Phygital Film Grain Noise ── */
+.noise-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  pointer-events: none;
+  z-index: 9999;
+  opacity: 0.03;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 400 400' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
+}
+
+/* Background Aura */
+.bg-aura {
+  position: fixed;
+  top: -20vh;
+  left: -10vw;
+  width: 60vw;
+  height: 60vw;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(59, 130, 246, 0.08) 0%, rgba(0,0,0,0) 60%);
+  pointer-events: none;
+  z-index: -1;
+  filter: blur(100px);
+}
+
+.bg-aura-2 {
+  position: fixed;
+  bottom: -20vh;
+  right: -10vw;
+  width: 50vw;
+  height: 50vw;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(251, 211, 77, 0.05) 0%, rgba(0,0,0,0) 60%);
+  pointer-events: none;
+  z-index: -1;
+  filter: blur(100px);
+}
+
+/* ── Global Layout Resets ── */
+* {
+  box-sizing: border-box;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  margin: 0;
+  font-family: var(--font-display);
+  font-weight: 600;
+  line-height: 1.1;
+}
+
+p {
+  margin: 0;
+  line-height: 1.6;
+}
+
+img, video {
+  display: block;
+  max-width: 100%;
+}
+
+button {
+  all: unset;
+  box-sizing: border-box;
+  cursor: pointer;
+}
+
+/* ── Responsive Architecture (The Rule of Two) ── */
+.mobile-only { display: none !important; }
+.desktop-only { display: flex !important; }
+
+@media (max-width: 1024px) {
+  .desktop-only { display: none !important; }
+  .mobile-only { display: flex !important; }
+}
+
+/* Custom Scrollbar for Desktop */
+@media (min-width: 1025px) {
+  ::-webkit-scrollbar {
+    width: 6px;
+  }
+  ::-webkit-scrollbar-track {
+    background: var(--bg-dark);
+  }
+  ::-webkit-scrollbar-thumb {
+    background: #1e293b;
+    border-radius: 10px;
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    background: var(--accent-color);
+  }
+}
+
+/* Base App Wrapper */
+.app-container {
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  z-index: 1;
+  min-height: 100vh;
+}
+
+.main-content {
+  flex: 1;
+  position: relative;
+  width: 100%;
+}
+
+/* ── Universal Marquee ── */
+.marquee-container {
+  overflow: hidden;
+  white-space: nowrap;
+  display: flex;
+  position: relative;
+  width: 100vw;
+  padding: 1.5rem 0;
+  border-top: 1px solid var(--border-color);
+  border-bottom: 1px solid var(--border-color);
+  background: rgba(251, 211, 77, 0.02);
+}
+
+.marquee-content {
+  display: flex;
+  animation: marquee 25s linear infinite;
+}
+
+.marquee-text {
+  font-family: var(--font-display);
+  font-style: italic;
+  font-size: clamp(2rem, 5vw, 4rem);
+  font-weight: 400;
+  color: var(--accent-color);
+  text-transform: lowercase;
+  margin-right: 3rem;
+  letter-spacing: 1px;
+}
+
+@keyframes marquee {
+  0% { transform: translate3d(0, 0, 0); }
+  100% { transform: translate3d(-50%, 0, 0); }
+}

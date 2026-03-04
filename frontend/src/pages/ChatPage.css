@@ -1,0 +1,233 @@
+/* ── CHAT VIEW (INTERACTION / WORK) ── */
+
+.chat-view {
+  width: 100vw;
+  min-height: 100vh;
+  padding-bottom: 200px;
+}
+
+.interaction-header {
+  padding: 15vh 5vw 5vh 5vw;
+}
+
+.text-massive {
+  font-size: clamp(3rem, 7vw, 7rem);
+  color: var(--text-primary);
+  margin-bottom: 1rem;
+  font-style: italic;
+  font-weight: 400;
+}
+
+.section-subtitle {
+  font-family: var(--font-body);
+  font-size: clamp(1rem, 2vw, 1.25rem);
+  color: var(--text-secondary);
+  max-width: 500px;
+  font-weight: 300;
+  letter-spacing: 1px;
+}
+
+/* ── Desktop: List To Hover ── */
+.list-to-hover {
+  position: relative;
+  width: 100vw;
+  display: flex !important; /* Wrapper uses desktop-only */
+  padding: 5vh 5vw;
+}
+
+.lth-container {
+  width: 60%;
+  display: flex;
+  flex-direction: column;
+}
+
+.lth-preview-layer {
+  position: absolute;
+  right: 10vw;
+  top: 10vh;
+  width: 450px;
+  height: 550px;
+  pointer-events: none;
+}
+
+.lth-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 3rem 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05); /* very subtle */
+  cursor: crosshair;
+  transition: opacity 0.4s var(--ease-fluid);
+}
+
+.lth-item:hover {
+  border-bottom-color: var(--accent-color);
+}
+
+.lth-container:hover .lth-item:not(:hover) {
+  opacity: 0.15; /* Dims non-hovered items cinematically */
+}
+
+.lth-text-block {
+  display: flex;
+  align-items: center;
+  gap: 2rem;
+}
+
+.lth-id {
+  font-family: var(--font-body);
+  color: var(--text-secondary);
+  font-size: 0.9rem;
+  letter-spacing: 2px;
+}
+
+.lth-text-block h2 {
+  font-size: clamp(2rem, 4vw, 3.5rem);
+  margin: 0;
+  font-weight: 400;
+  transition: transform 0.4s var(--ease-spring), color 0.4s ease;
+}
+
+.lth-item:hover h2 {
+  transform: translateX(20px);
+  color: var(--accent-secondary); /* Peacock Blue */
+}
+
+.lth-arrow {
+  opacity: 0;
+  transform: translateX(-20px);
+  transition: all 0.4s var(--ease-fluid);
+  color: var(--accent-secondary);
+}
+
+.lth-item:hover .lth-arrow {
+  opacity: 1;
+  transform: translateX(0);
+}
+
+/* Floating Card Preview */
+.lth-floating-card {
+  width: 100%;
+  height: 100%;
+  background: var(--bg-surface);
+  border: 1px solid var(--border-glow);
+  border-radius: 20px;
+  padding: 3rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  box-shadow: 0 40px 80px rgba(0,0,0,0.8), inset 0 1px 0 rgba(255, 255, 255, 0.1);
+}
+
+.floating-inner {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2rem;
+}
+
+.floating-inner p {
+  font-family: var(--font-body);
+  color: var(--text-secondary);
+  font-size: 1.1rem;
+  line-height: 1.6;
+}
+
+.initiate-btn {
+  background: transparent;
+  color: var(--accent-color);
+  border: 1px solid var(--accent-color);
+  font-family: var(--font-body);
+  font-weight: 600;
+  padding: 1rem 2rem;
+  font-size: 0.9rem;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  border-radius: 100px;
+  pointer-events: auto; /* Allow clicking the floating preview */
+  transition: all 0.3s ease;
+}
+
+.initiate-btn:hover {
+  background: var(--accent-color);
+  color: var(--bg-dark);
+}
+
+/* ── Mobile Native App Stacked Bleed ── */
+.mobile-stacked {
+  display: flex !important; /* Wrapper logic */
+  flex-direction: column;
+  gap: 1.5rem;
+  padding: 0 1rem;
+  margin-top: 2rem;
+}
+
+.mobile-card {
+  width: 100%;
+  background: var(--bg-surface);
+  border: 1px solid var(--border-color);
+  border-radius: 16px;
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.mobile-badge {
+  position: absolute;
+  top: 1rem;
+  left: 1rem;
+  background: rgba(15, 23, 42, 0.6);
+  backdrop-filter: blur(10px);
+  color: var(--accent-color);
+  font-family: var(--font-body);
+  font-size: 0.75rem;
+  font-weight: 600;
+  padding: 0.4rem 0.8rem;
+  border-radius: 50px;
+  z-index: 10;
+  letter-spacing: 1px;
+}
+
+.mobile-card-media {
+  width: 100%;
+  height: 250px;
+  background: rgba(2, 6, 18, 0.5); /* deep blue */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.mobile-card-content {
+  padding: 1.5rem;
+}
+
+.mobile-card-content h3 {
+  font-size: 1.8rem;
+  margin-bottom: 0.5rem;
+  color: var(--text-primary);
+  font-weight: 400;
+}
+
+.mobile-card-content p {
+  color: var(--text-secondary);
+  font-size: 0.95rem;
+  margin-bottom: 1.5rem;
+}
+
+.mobile-card-touch-layer {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 1rem 1.5rem;
+  border-top: 1px solid var(--border-color);
+  background: rgba(255, 255, 255, 0.02);
+  color: var(--accent-color);
+  font-family: var(--font-body);
+  font-weight: 600;
+  letter-spacing: 1px;
+}

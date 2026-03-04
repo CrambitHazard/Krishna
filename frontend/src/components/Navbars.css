@@ -1,0 +1,180 @@
+/* Navbars CSS File */
+
+/* ── Desktop Architecture (Cinematic Hover, Glassmorphism) ── */
+.nav-desktop-wrapper {
+  position: fixed;
+  top: 2rem;
+  left: 0;
+  width: 100vw;
+  display: flex !important; /* Managed by app.css media query wrapper */
+  justify-content: center;
+  z-index: 1000;
+  pointer-events: none;
+}
+
+.nav-desktop {
+  pointer-events: auto;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: rgba(10, 10, 10, 0.4);
+  backdrop-filter: blur(24px) saturate(180%);
+  -webkit-backdrop-filter: blur(24px) saturate(180%);
+  border: 1px solid var(--border-color);
+  padding: 0.5rem 0.5rem 0.5rem 2rem;
+  border-radius: 100px;
+  width: 90%;
+  max-width: 1200px;
+  box-shadow: 0 30px 60px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.05);
+  transition: border-color var(--ease-fluid) 0.4s;
+}
+
+.nav-desktop:hover {
+  border-color: rgba(255, 255, 255, 0.15);
+}
+
+.nav-brand {
+  font-family: var(--font-display);
+  font-weight: 700;
+  letter-spacing: 4px;
+  font-size: 1.1rem;
+  text-transform: uppercase;
+}
+
+.nav-links {
+  display: flex;
+  gap: 2rem;
+}
+
+.nav-link {
+  text-decoration: none;
+  font-family: var(--font-body);
+  font-size: 0.85rem;
+  font-weight: 500;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  transition: color 0.3s var(--ease-fluid);
+  position: relative;
+}
+
+.nav-link span {
+  font-family: var(--font-display);
+  font-size: 0.7rem;
+  color: var(--border-glow);
+}
+
+.nav-link:hover {
+  color: var(--text-primary);
+}
+
+.nav-link::after {
+  content: '';
+  position: absolute;
+  bottom: -4px;
+  left: 0;
+  width: 100%;
+  height: 1px;
+  background: var(--accent-color);
+  transform: scaleX(0);
+  transform-origin: right;
+  transition: transform 0.4s var(--ease-fluid);
+}
+
+.nav-link:hover::after, .nav-link.active::after {
+  transform: scaleX(1);
+  transform-origin: left;
+}
+
+.nav-link.active {
+  color: var(--text-primary);
+}
+
+.nav-btn {
+  text-decoration: none;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  background: var(--text-primary);
+  color: var(--bg-dark);
+  padding: 0.75rem 2rem;
+  border-radius: 100px;
+  font-family: var(--font-display);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 1.5px;
+  font-size: 0.85rem;
+  position: relative;
+  overflow: hidden;
+  transition: transform 0.3s var(--ease-spring);
+}
+
+.nav-btn:hover {
+  transform: scale(1.05);
+}
+
+.btn-circle {
+  width: 6px;
+  height: 6px;
+  background: var(--accent-color);
+  border-radius: 50%;
+  transition: transform 0.3s var(--ease-fluid);
+}
+
+.nav-btn:hover .btn-circle {
+  transform: scale(2);
+}
+
+/* ── Mobile Architecture (Bottom Tab, Native App Feels, NO HOVERS) ── */
+.nav-mobile-bottom {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  width: 100vw;
+  height: 70px; /* Safe area padding natively added */
+  background: #000;
+  display: flex !important; /* Managed by media query wrapper */
+  justify-content: space-around;
+  align-items: center;
+  z-index: 1000;
+  border-top: 1px solid var(--border-color);
+  padding-bottom: env(safe-area-inset-bottom);
+}
+
+.mob-tab {
+  display: flex;
+  flex: 1;
+  justify-content: center;
+  align-items: center;
+  height: 100%;
+  color: var(--text-secondary);
+  -webkit-tap-highlight-color: transparent;
+  transition: transform 0.1s; /* active tap state */
+}
+
+.mob-tab:active {
+  transform: scale(0.85); /* Touch active state feedback */
+}
+
+.mob-tab.active-tab {
+  color: var(--text-primary);
+}
+
+/* Portal/FAB styled action on mobile */
+.active-mob-portal {
+  color: var(--accent-color);
+  position: relative;
+}
+
+.active-mob-portal.active-tab {
+  background: var(--accent-color);
+  border-radius: 50%;
+  width: 50px;
+  height: 50px;
+  flex: none; /* break the flex-1 */
+  margin: 0 1rem;
+  box-shadow: 0 0 20px var(--accent-glow);
+}

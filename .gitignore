@@ -64,3 +64,10 @@ data/
 _test_suite.py
 _test_output.txt
 flow
+
+# ── Frontend / Vite ──────────────────────────────────────────────────
+node_modules/
+dist/
+dist-ssr/
+*.local
+npm-debug.log*

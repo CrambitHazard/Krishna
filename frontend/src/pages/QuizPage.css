@@ -1,0 +1,273 @@
+/* ── QUIZ VIEW (STUDIO / EDITORIAL) ── */
+
+.quiz-view {
+  width: 100vw;
+  background-color: var(--bg-dark);
+  color: var(--text-primary);
+  padding-bottom: 100px;
+}
+
+/* ── Desktop: Editorial Split ── */
+.editorial-split {
+  display: flex !important; /* Wrapper logic */
+  width: 100%;
+  min-height: 100vh;
+}
+
+.editorial-pinned {
+  width: 50%;
+  height: 100vh;
+  position: sticky;
+  top: 0;
+  padding: 10vh 5vw;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  border-right: 1px solid var(--border-color);
+}
+
+.editorial-label {
+  font-family: var(--font-body);
+  font-size: 0.85rem;
+  letter-spacing: 3px;
+  color: var(--accent-color);
+  display: block;
+  margin-bottom: 2rem;
+  text-transform: uppercase;
+}
+
+.editorial-title {
+  font-size: clamp(3.5rem, 6vw, 6.5rem);
+  line-height: 1;
+  letter-spacing: -2px;
+  margin-bottom: 2rem;
+  text-transform: uppercase;
+  font-weight: 600;
+}
+
+.editorial-desc {
+  font-size: 1.2rem;
+  color: var(--text-secondary);
+  line-height: 1.6;
+  max-width: 80%;
+  margin-bottom: 3rem;
+  font-weight: 300;
+  font-family: var(--font-body);
+}
+
+.editorial-btn {
+  font-family: var(--font-body);
+  font-weight: 600;
+  text-transform: uppercase;
+  font-size: 0.9rem;
+  letter-spacing: 2px;
+  border: 1px solid var(--accent-color);
+  color: var(--accent-color);
+  padding: 1rem 2.5rem;
+  border-radius: 100px; /* Pill */
+  align-self: flex-start;
+  transition: all 0.4s var(--ease-fluid);
+}
+
+.editorial-btn:hover {
+  background: var(--accent-color);
+  color: var(--bg-dark);
+  transform: translateY(-5px);
+  box-shadow: 0 10px 30px var(--accent-glow);
+}
+
+.editorial-scrolling {
+  width: 50%;
+  padding: 10vh 5vw;
+  display: flex;
+  flex-direction: column;
+  gap: 15vh; /* Massive spacing between modules */
+}
+
+/* Scrollable Modules */
+.editorial-module {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.module-image-card {
+  width: 100%;
+  height: 50vh;
+  background-color: var(--bg-surface);
+  border: 1px solid var(--border-color);
+  border-radius: 24px;
+  position: relative;
+  overflow: hidden;
+}
+
+.module-overlay-grain {
+  position: absolute;
+  inset: 0;
+  opacity: 0.05;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 400 400' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
+}
+
+.module-meta {
+  position: absolute;
+  top: 1.5rem;
+  left: 1.5rem;
+  right: 1.5rem;
+  display: flex;
+  justify-content: space-between;
+  font-family: var(--font-body);
+  font-size: 0.8rem;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+}
+
+.accent-tag {
+  color: var(--accent-secondary); /* Peacock Blue */
+  font-weight: 600;
+}
+
+.module-heading {
+  font-size: clamp(2rem, 3.5vw, 3rem);
+  letter-spacing: -1px;
+  text-transform: none;
+  font-weight: 400;
+  font-style: italic;
+  color: var(--text-primary);
+}
+
+.module-metrics {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  border-top: 1px solid var(--border-color);
+  padding-top: 1.5rem;
+  font-family: var(--font-body);
+}
+
+.module-metrics label {
+  display: block;
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+  margin-bottom: 0.5rem;
+  letter-spacing: 2px;
+}
+
+.module-metrics span {
+  font-family: var(--font-display);
+  font-size: 2rem;
+  font-weight: 600;
+  color: var(--accent-color);
+}
+
+.module-action {
+  font-family: var(--font-body);
+  font-size: 0.8rem;
+  color: var(--bg-dark);
+  background: var(--text-primary);
+  padding: 0.6rem 1.2rem;
+  border-radius: 50px;
+  font-weight: 600;
+  letter-spacing: 1px;
+  transition: transform 0.3s;
+}
+
+.module-action:hover {
+  background: var(--accent-color);
+  transform: scale(1.05);
+}
+
+/* ── Mobile: Image-Heavy Grid Break ── */
+.mobile-editorial {
+  display: flex !important;
+  flex-direction: column;
+  padding: 15vh 1rem 5rem 1rem;
+}
+
+.mobile-editorial-header {
+  margin-bottom: 4rem;
+}
+
+.mobile-editorial-header .editorial-title {
+  font-size: 3.5rem;
+  letter-spacing: -1px;
+  margin-bottom: 1rem;
+}
+
+.mobile-editorial-header .editorial-desc {
+  font-size: 1rem;
+  margin-bottom: 2rem;
+}
+
+.mobile-modules-container {
+  display: flex;
+  flex-direction: column;
+  gap: 5rem;
+}
+
+.mobile-editorial-block {
+  position: relative;
+  width: 100%;
+}
+
+.mobile-image-wrapper {
+  width: 90%;
+  height: 300px;
+  background-color: var(--bg-surface);
+  border: 1px solid var(--border-color);
+  border-radius: 20px;
+  margin-left: 10%; /* offset to right */
+  position: relative;
+  overflow: hidden;
+}
+
+.mobile-grain {
+  position: absolute;
+  inset: 0;
+  opacity: 0.1;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 400 400' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
+}
+
+/* Break grid boundaries by pulling text over the top left corner of the offset image */
+.mobile-overlap-content {
+  position: relative;
+  width: 85%;
+  margin-top: -80px;
+  background: rgba(8, 18, 38, 0.85); /* Deep surface blue */
+  backdrop-filter: blur(16px);
+  padding: 1.5rem;
+  border-radius: 16px;
+  border: 1px solid var(--border-color);
+  border-left: 2px solid var(--accent-color);
+}
+
+.mobile-status {
+  font-family: var(--font-body);
+  color: var(--accent-secondary);
+  font-size: 0.7rem;
+  display: block;
+  margin-bottom: 0.5rem;
+  letter-spacing: 1px;
+}
+
+.mobile-overlap-content h3 {
+  font-size: 1.8rem;
+  margin-bottom: 1rem;
+  line-height: 1.2;
+  font-style: italic;
+  font-weight: 400;
+}
+
+.mobile-score-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-family: var(--font-body);
+  font-size: 0.9rem;
+  color: var(--text-secondary);
+}
+
+.mobile-retest {
+  color: var(--accent-color);
+  font-weight: 600;
+  text-decoration: none;
+}
