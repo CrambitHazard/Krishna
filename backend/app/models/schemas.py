@@ -95,9 +95,10 @@ class QuizResponse(BaseModel):
     metadata: dict[str, Any] = Field(default_factory=dict)
 
 
-# ── Quiz Evaluation ────────────────────────────────────────────────────
-class QuizEvaluateRequest(BaseModel):
+# ── Quiz Submission (grading) ──────────────────────────────────────────
+class QuizSubmitRequest(BaseModel):
     """User's answers submitted for grading."""
+    topic: str = Field(..., min_length=1, max_length=1024)
     user_answers: list[str] = Field(
         ...,
         min_length=1,
@@ -110,6 +111,10 @@ class QuizEvaluateRequest(BaseModel):
     )
 
 
+# Keep old name as alias for backwards compatibility
+QuizEvaluateRequest = QuizSubmitRequest
+
+
 class QuestionFeedbackSchema(BaseModel):
     """Per-question feedback after evaluation."""
     question: str
@@ -120,13 +125,18 @@ class QuestionFeedbackSchema(BaseModel):
     explanation: str
 
 
-class QuizEvaluateResponse(BaseModel):
+class QuizSubmitResponse(BaseModel):
     """Evaluation result with score and per-question feedback."""
     score: int
     total: int
     percentage: float
+    topic: str
     correct_questions: list[QuestionFeedbackSchema]
     incorrect_questions: list[QuestionFeedbackSchema]
+
+
+# Keep old name as alias for backwards compatibility
+QuizEvaluateResponse = QuizSubmitResponse
 
 
 # ── Analytics ───────────────────────────────────────────────────────────
@@ -148,3 +158,21 @@ class AnalyticsResponse(BaseModel):
     summary: dict[str, Any] = Field(default_factory=dict)
 
 
+# ── Progress (combined) ────────────────────────────────────────────────
+class TopicProgressSchema(BaseModel):
+    """Progress for a single topic."""
+    topic: str
+    accuracy: float
+    attempts: int
+    total_score: int
+    total_questions: int
+    last_updated: str
+
+
+class ProgressResponse(BaseModel):
+    """Combined progress + analytics in one response."""
+    topics: list[TopicProgressSchema]
+    weak_topics: list[TopicInsightSchema]
+    strong_topics: list[TopicInsightSchema]
+    recommendations: list[str]
+    summary: dict[str, Any] = Field(default_factory=dict)
