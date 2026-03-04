@@ -15,6 +15,7 @@ from typing import AsyncGenerator
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
+from app.api.routes_analytics import router as analytics_router
 from app.api.routes_chat import router as chat_router
 from app.api.routes_quiz import router as quiz_router
 from app.api.routes_upload import router as upload_router
@@ -75,6 +76,7 @@ def create_app() -> FastAPI:
     app.include_router(upload_router, prefix="/api/v1")
     app.include_router(chat_router, prefix="/api/v1")
     app.include_router(quiz_router, prefix="/api/v1")
+    app.include_router(analytics_router, prefix="/api/v1")
 
     # ── health check ───────────────────────────────────────────────────
     @app.get(

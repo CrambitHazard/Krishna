@@ -128,3 +128,23 @@ class QuizEvaluateResponse(BaseModel):
     correct_questions: list[QuestionFeedbackSchema]
     incorrect_questions: list[QuestionFeedbackSchema]
 
+
+# ── Analytics ───────────────────────────────────────────────────────────
+class TopicInsightSchema(BaseModel):
+    """Analysis of a single topic."""
+    topic: str
+    accuracy: float
+    attempts: int
+    status: str
+    is_struggling: bool
+
+
+class AnalyticsResponse(BaseModel):
+    """Structured output from the analytics agent."""
+    weak_topics: list[TopicInsightSchema]
+    strong_topics: list[TopicInsightSchema]
+    moderate_topics: list[TopicInsightSchema] = Field(default_factory=list)
+    recommendations: list[str]
+    summary: dict[str, Any] = Field(default_factory=dict)
+
+
