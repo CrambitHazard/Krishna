@@ -118,6 +118,7 @@ class Orchestrator:
                 "chunks_retrieved": len(planner_result.chunks),
                 "had_context": planner_result.has_context,
                 "elapsed_seconds": elapsed,
+                "teacher": teacher_result.metadata,
                 **kwargs,
             },
         )
