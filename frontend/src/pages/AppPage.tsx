@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { BookOpen, Target, Send, Paperclip, Menu, X, CheckCircle, FileText, Plus, MessageCircle, MoreHorizontal } from 'lucide-react';
+import { BookOpen, Target, Send, Paperclip, Menu, X, CheckCircle, FileText, Plus, MessageCircle, MoreHorizontal, Loader2 } from 'lucide-react';
 import './AppPage.css';
+import { uploadDocument } from '../services/api';
 
 type Tab = 'chat' | 'knowledge' | 'tests';
 
@@ -52,6 +53,11 @@ export default function AppPage() {
     const [chats, setChats] = useState<ChatSession[]>(INITIAL_CHATS);
     const [activeChatId, setActiveChatId] = useState<string>('1');
     const [input, setInput] = useState('');
+
+    // Upload State
+    const [isUploading, setIsUploading] = useState(false);
+    const [uploadMessage, setUploadMessage] = useState('');
+    const fileInputRef = useRef<HTMLInputElement>(null);
 
     const messagesEndRef = useRef<HTMLDivElement>(null);
 
@@ -117,6 +123,41 @@ export default function AppPage() {
         }, 1200);
     };
 
+    const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (!file || !activeChat) return;
+
+        setIsUploading(true);
+        setUploadMessage('');
+
+        try {
+            const response = await uploadDocument(file);
+
+            setUploadMessage(`Success! ${response.message} (${response.total_chunks} chunks indexed)`);
+
+            // Add document to current chat state
+            setChats(prev => prev.map(chat => {
+                if (chat.id === activeChatId) {
+                    return { ...chat, documents: [...chat.documents, response.filename] };
+                }
+                return chat;
+            }));
+        } catch (err: any) {
+            console.error('Upload failed:', err);
+            setUploadMessage(err.response?.data?.detail || 'Failed to upload document. Please try again.');
+        } finally {
+            setIsUploading(false);
+            // Reset input
+            if (fileInputRef.current) {
+                fileInputRef.current.value = '';
+            }
+        }
+    };
+
+    const triggerFileInput = () => {
+        fileInputRef.current?.click();
+    };
+
     const renderChat = () => (
         <div className="app-chat-view">
             <div className="chat-messages-container">
@@ -158,12 +199,33 @@ export default function AppPage() {
                 <p className="content-subtitle">Files isolated to the context of <b>"{activeChat?.title}"</b>.</p>
             </div>
 
-            <div className="upload-dropzone">
-                <BookOpen size={48} className="dropzone-icon" />
-                <h3>Drag & Drop your texts here</h3>
+            <div className="upload-dropzone" onClick={isUploading ? undefined : triggerFileInput}>
+                {isUploading ? (
+                    <Loader2 size={48} className="dropzone-icon spinning" />
+                ) : (
+                    <BookOpen size={48} className="dropzone-icon" />
+                )}
+
+                <h3>{isUploading ? 'Uploading & Indexing...' : 'Upload your text materials directly'}</h3>
                 <p className="dropzone-formats">Supports .PDF, .TXT, .MD, .DOCX</p>
-                <button className="primary-btn">Browse Files</button>
+
+                <input
+                    type="file"
+                    ref={fileInputRef}
+                    style={{ display: 'none' }}
+                    accept=".pdf,.txt,.md,.docx"
+                    onChange={handleFileUpload}
+                />
+                <button className="primary-btn" disabled={isUploading}>
+                    {isUploading ? 'Processing...' : 'Browse Files'}
+                </button>
             </div>
+
+            {uploadMessage && (
+                <div className="upload-result-msg">
+                    <p>{uploadMessage}</p>
+                </div>
+            )}
 
             <div className="uploaded-list">
                 <h4 className="list-title">Active Materials in this Chat ({activeChat?.documents.length || 0})</h4>
