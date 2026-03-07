@@ -329,6 +329,48 @@
   max-width: 80%;
 }
 
+.thinking-bubble {
+  padding: 1.2rem 2rem !important;
+}
+
+.dot-pulse {
+  display: inline-flex;
+  gap: 6px;
+}
+
+.dot-pulse::before,
+.dot-pulse::after,
+.dot-pulse {
+  position: relative;
+}
+
+.dot-pulse::before {
+  content: '';
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--accent-color);
+  animation: dotBounce 1.4s infinite ease-in-out both;
+  animation-delay: -0.32s;
+}
+
+.dot-pulse::after {
+  content: '';
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--accent-color);
+  animation: dotBounce 1.4s infinite ease-in-out both;
+  animation-delay: 0.16s;
+}
+
+@keyframes dotBounce {
+  0%, 80%, 100% { opacity: 0.3; transform: scale(0.8); }
+  40% { opacity: 1; transform: scale(1); }
+}
+
 .chat-input-area {
   padding: 2rem 10vw;
   background: linear-gradient(to top, var(--bg-dark) 80%, transparent);

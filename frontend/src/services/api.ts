@@ -6,9 +6,9 @@ const BASE_URL = import.meta.env.VITE_API_URL || 'http://54.210.23.55:8000/api/v
 
 const api = axios.create({
     baseURL: BASE_URL,
-    headers: {
-        'Content-Type': 'application/json',
-    },
+    // Do NOT set a default Content-Type header here.
+    // Axios auto-detects application/json for objects
+    // and multipart/form-data for FormData.
 });
 
 // ── Types ──────────────────────────────────────────────────────────────

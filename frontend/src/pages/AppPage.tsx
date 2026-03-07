@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { BookOpen, Target, Send, Paperclip, Menu, X, CheckCircle, FileText, Plus, MessageCircle, MoreHorizontal, Loader2 } from 'lucide-react';
 import './AppPage.css';
-import { uploadDocument } from '../services/api';
+import { uploadDocument, askQuestion } from '../services/api';
 
 type Tab = 'chat' | 'knowledge' | 'tests';
 
@@ -53,6 +53,7 @@ export default function AppPage() {
     const [chats, setChats] = useState<ChatSession[]>(INITIAL_CHATS);
     const [activeChatId, setActiveChatId] = useState<string>('1');
     const [input, setInput] = useState('');
+    const [isThinking, setIsThinking] = useState(false);
 
     // Upload State
     const [isUploading, setIsUploading] = useState(false);
@@ -87,16 +88,15 @@ export default function AppPage() {
         if (window.innerWidth < 1024) setSidebarOpen(false);
     };
 
-    const handleSend = (e: React.FormEvent) => {
+    const handleSend = async (e: React.FormEvent) => {
         e.preventDefault();
-        if (!input.trim() || !activeChat) return;
+        if (!input.trim() || !activeChat || isThinking) return;
 
         const userMessage = input;
 
         // Update local state: add user message
         setChats(prev => prev.map(chat => {
             if (chat.id === activeChatId) {
-                // Update title based on first message if it's "New Conversation"
                 const title = (chat.title === 'New Conversation' && userMessage.length > 3)
                     ? userMessage.substring(0, 30) + '...'
                     : chat.title;
@@ -105,22 +105,40 @@ export default function AppPage() {
             return chat;
         }));
         setInput('');
+        setIsThinking(true);
 
-        // Simulate AI response
-        setTimeout(() => {
+        try {
+            const response = await askQuestion(userMessage);
+
             setChats(prev => prev.map(chat => {
                 if (chat.id === activeChatId) {
                     return {
                         ...chat,
                         messages: [...chat.messages, {
                             role: 'assistant',
-                            content: 'I comprehend your inquiry. Based on the sacred texts and materials provided to me, the essence lies within the foundational principles we uploaded. Let me guide you clearly...'
+                            content: response.answer
                         }]
                     };
                 }
                 return chat;
             }));
-        }, 1200);
+        } catch (err: any) {
+            console.error('Chat error:', err);
+            setChats(prev => prev.map(chat => {
+                if (chat.id === activeChatId) {
+                    return {
+                        ...chat,
+                        messages: [...chat.messages, {
+                            role: 'assistant',
+                            content: err.response?.data?.detail || 'I could not process your question. Please ensure documents are uploaded and try again.'
+                        }]
+                    };
+                }
+                return chat;
+            }));
+        } finally {
+            setIsThinking(false);
+        }
     };
 
     const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -171,6 +189,14 @@ export default function AppPage() {
                         </div>
                     </div>
                 ))}
+                {isThinking && (
+                    <div className="chat-message-row assistant">
+                        <div className="chat-avatar">K</div>
+                        <div className="chat-bubble assistant thinking-bubble">
+                            <span className="dot-pulse"></span>
+                        </div>
+                    </div>
+                )}
                 <div ref={messagesEndRef} />
             </div>
 
@@ -185,7 +211,7 @@ export default function AppPage() {
                         value={input}
                         onChange={e => setInput(e.target.value)}
                     />
-                    <button type="submit" className="send-btn" disabled={!input.trim()}><Send size={18} /></button>
+                    <button type="submit" className="send-btn" disabled={!input.trim() || isThinking}><Send size={18} /></button>
                 </form>
                 <p className="chat-footer-text">Krishna only references your uploaded documents for <b>"{activeChat?.title}"</b>.</p>
             </div>
