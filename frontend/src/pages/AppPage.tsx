@@ -1,7 +1,8 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { BookOpen, Target, Send, Paperclip, Menu, X, CheckCircle, FileText, Plus, MessageCircle, MoreHorizontal, Loader2 } from 'lucide-react';
+import { BookOpen, Send, Paperclip, Menu, X, CheckCircle, FileText, Plus, MessageCircle, MoreHorizontal, Loader2 } from 'lucide-react';
 import './AppPage.css';
-import { uploadDocument, askQuestion } from '../services/api';
+import { uploadDocument, askQuestion, generateQuiz, submitQuiz } from '../services/api';
+import type { QuizQuestion, QuizSubmitResponse } from '../services/api';
 
 type Tab = 'chat' | 'knowledge' | 'tests';
 
@@ -60,6 +61,15 @@ export default function AppPage() {
     const [uploadMessage, setUploadMessage] = useState('');
     const fileInputRef = useRef<HTMLInputElement>(null);
 
+    // Quiz State
+    const [quizTopic, setQuizTopic] = useState('');
+    const [quizQuestions, setQuizQuestions] = useState<QuizQuestion[]>([]);
+    const [quizAnswers, setQuizAnswers] = useState<string[]>([]);
+    const [quizResult, setQuizResult] = useState<QuizSubmitResponse | null>(null);
+    const [isGeneratingQuiz, setIsGeneratingQuiz] = useState(false);
+    const [isSubmittingQuiz, setIsSubmittingQuiz] = useState(false);
+    const [quizError, setQuizError] = useState('');
+
     const messagesEndRef = useRef<HTMLDivElement>(null);
 
     const activeChat = chats.find(c => c.id === activeChatId) || chats[0];
@@ -71,6 +81,17 @@ export default function AppPage() {
     useEffect(() => {
         scrollToBottom();
     }, [activeChat?.messages]);
+
+    // Reset quiz & upload state when switching chats
+    useEffect(() => {
+        setQuizQuestions([]);
+        setQuizAnswers([]);
+        setQuizResult(null);
+        setQuizError('');
+        setQuizTopic('');
+        setUploadMessage('');
+        setActiveTab('chat');
+    }, [activeChatId]);
 
     const handleNewChat = () => {
         const newChatId = Date.now().toString();
@@ -275,30 +296,181 @@ export default function AppPage() {
         </div>
     );
 
+    const handleGenerateQuiz = async () => {
+        const topic = quizTopic.trim() || activeChat?.title || 'General';
+        setIsGeneratingQuiz(true);
+        setQuizError('');
+        setQuizQuestions([]);
+        setQuizAnswers([]);
+        setQuizResult(null);
+
+        try {
+            const response = await generateQuiz(topic, 5, true);
+            setQuizQuestions(response.questions);
+            setQuizAnswers(new Array(response.questions.length).fill(''));
+            setQuizTopic(response.topic);
+        } catch (err: any) {
+            console.error('Quiz generation failed:', err);
+            setQuizError(err.response?.data?.detail || 'Failed to generate quiz. Make sure documents are uploaded first.');
+        } finally {
+            setIsGeneratingQuiz(false);
+        }
+    };
+
+    const handleSubmitQuiz = async () => {
+        if (quizAnswers.some(a => !a)) {
+            setQuizError('Please answer all questions before submitting.');
+            return;
+        }
+        setIsSubmittingQuiz(true);
+        setQuizError('');
+
+        try {
+            // Backend expects just the letter (e.g. "A"), but quizAnswers stores
+            // the full option text (e.g. "A) THE PLAINS..."). Extract the letter.
+            const letterAnswers = quizAnswers.map(ans => {
+                const match = ans.match(/^([A-Da-d])\)/);
+                return match ? match[1].toUpperCase() : ans;
+            });
+            const result = await submitQuiz(quizTopic, letterAnswers, quizQuestions);
+            setQuizResult(result);
+        } catch (err: any) {
+            console.error('Quiz submit failed:', err);
+            setQuizError(err.response?.data?.detail || 'Failed to submit quiz.');
+        } finally {
+            setIsSubmittingQuiz(false);
+        }
+    };
+
+    const handleSelectAnswer = (questionIdx: number, option: string) => {
+        setQuizAnswers(prev => {
+            const updated = [...prev];
+            updated[questionIdx] = option;
+            return updated;
+        });
+    };
+
+    const resetQuiz = () => {
+        setQuizQuestions([]);
+        setQuizAnswers([]);
+        setQuizResult(null);
+        setQuizError('');
+    };
+
     const renderTests = () => (
         <div className="app-content-view">
             <div className="content-header">
-                <h1 className="content-title">Mastery Quizzes</h1>
-                <p className="content-subtitle">Quizzes generated for <b>"{activeChat?.title}"</b>.</p>
+                <h1 className="content-title">Quizzes</h1>
+                <p className="content-subtitle">Test your understanding of <b>"{activeChat?.title}"</b>.</p>
             </div>
 
-            <div className="tests-grid">
-                {activeChat?.quizzes.length === 0 ? (
-                    <p style={{ color: 'var(--text-secondary)', gridColumn: '1 / -1' }}>No quizzes generated for this thread yet.</p>
-                ) : (
-                    activeChat?.quizzes.map((quiz, idx) => (
-                        <div key={idx} className="test-card">
-                            <h4>{quiz.title}</h4>
-                            <p className="test-meta">{quiz.questions} Questions • {quiz.status}</p>
-                            <button className="secondary-btn">Review</button>
+            {/* No quiz active — show generator */}
+            {quizQuestions.length === 0 && !quizResult && (
+                <div className="quiz-generator">
+                    <div className="quiz-topic-input">
+                        <input
+                            type="text"
+                            placeholder={`Topic (defaults to "${activeChat?.title}")`}
+                            value={quizTopic}
+                            onChange={e => setQuizTopic(e.target.value)}
+                            className="quiz-topic-field"
+                        />
+                        <button
+                            className="primary-btn"
+                            onClick={handleGenerateQuiz}
+                            disabled={isGeneratingQuiz}
+                        >
+                            {isGeneratingQuiz ? 'Generating...' : 'Generate Quiz'}
+                        </button>
+                    </div>
+                    {isGeneratingQuiz && (
+                        <div className="quiz-loading">
+                            <Loader2 size={32} className="spinning" />
+                            <p>Krishna is preparing questions from your materials...</p>
                         </div>
-                    ))
-                )}
-                <button className="create-test-card" onClick={() => alert('Quiz generation simulation')}>
-                    <Target size={32} className="create-test-icon" />
-                    <span>Generate New Quiz</span>
-                </button>
-            </div>
+                    )}
+                </div>
+            )}
+
+            {/* Quiz questions with radio buttons */}
+            {quizQuestions.length > 0 && !quizResult && (
+                <div className="quiz-questions">
+                    {quizQuestions.map((q, qIdx) => (
+                        <div key={qIdx} className="quiz-question-card">
+                            <h4 className="question-number">Question {qIdx + 1} of {quizQuestions.length}</h4>
+                            <p className="question-text">{q.question}</p>
+                            <div className="question-options">
+                                {q.options.map((opt, oIdx) => (
+                                    <label key={oIdx} className={`option-label ${quizAnswers[qIdx] === opt ? 'selected' : ''}`}>
+                                        <input
+                                            type="radio"
+                                            name={`q-${qIdx}`}
+                                            value={opt}
+                                            checked={quizAnswers[qIdx] === opt}
+                                            onChange={() => handleSelectAnswer(qIdx, opt)}
+                                        />
+                                        <span className="option-radio" />
+                                        <span className="option-text">{opt}</span>
+                                    </label>
+                                ))}
+                            </div>
+                        </div>
+                    ))}
+
+                    <button
+                        className="primary-btn quiz-submit-btn"
+                        onClick={handleSubmitQuiz}
+                        disabled={isSubmittingQuiz}
+                    >
+                        {isSubmittingQuiz ? 'Submitting...' : 'Submit Answers'}
+                    </button>
+                </div>
+            )}
+
+            {/* Quiz result */}
+            {quizResult && (
+                <div className="quiz-result">
+                    <div className="result-score-card">
+                        <h2 className="result-score">{quizResult.percentage}%</h2>
+                        <p className="result-detail">{quizResult.score} / {quizResult.total} correct</p>
+                        <p className="result-topic">Topic: {quizResult.topic}</p>
+                    </div>
+
+                    {quizResult.incorrect_questions.length > 0 && (
+                        <div className="result-review">
+                            <h4>Review Incorrect Answers</h4>
+                            {quizResult.incorrect_questions.map((item, i) => (
+                                <div key={i} className="review-item incorrect">
+                                    <p className="review-question">{item.question}</p>
+                                    <p className="review-answer">Your answer: <span className="wrong">{item.user_answer}</span></p>
+                                    <p className="review-answer">Correct: <span className="correct">{item.correct_answer}</span></p>
+                                    <p className="review-explanation">{item.explanation}</p>
+                                </div>
+                            ))}
+                        </div>
+                    )}
+
+                    {quizResult.correct_questions.length > 0 && (
+                        <div className="result-review">
+                            <h4>Correct Answers</h4>
+                            {quizResult.correct_questions.map((item, i) => (
+                                <div key={i} className="review-item correct-item">
+                                    <p className="review-question">{item.question}</p>
+                                    <p className="review-explanation">{item.explanation}</p>
+                                </div>
+                            ))}
+                        </div>
+                    )}
+
+                    <button className="primary-btn" onClick={resetQuiz}>Take Another Quiz</button>
+                </div>
+            )}
+
+            {quizError && (
+                <div className="upload-result-msg" style={{ borderColor: '#e74c3c' }}>
+                    <p>{quizError}</p>
+                </div>
+            )}
         </div>
     );
 
