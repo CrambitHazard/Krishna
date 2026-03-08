@@ -1,10 +1,11 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { BookOpen, Send, Paperclip, Menu, X, CheckCircle, FileText, Plus, MessageCircle, MoreHorizontal, Loader2 } from 'lucide-react';
+import { BookOpen, Send, Paperclip, Menu, X, CheckCircle, FileText, Plus, MessageCircle, MoreHorizontal, Loader2, AlertTriangle, TrendingUp } from 'lucide-react';
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, LineChart, Line } from 'recharts';
 import './AppPage.css';
-import { uploadDocument, askQuestion, generateQuiz, submitQuiz } from '../services/api';
-import type { QuizQuestion, QuizSubmitResponse } from '../services/api';
+import { uploadDocument, askQuestion, generateQuiz, submitQuiz, getProgress } from '../services/api';
+import type { QuizQuestion, QuizSubmitResponse, ProgressResponse } from '../services/api';
 
-type Tab = 'chat' | 'knowledge' | 'tests';
+type Tab = 'chat' | 'knowledge' | 'tests' | 'analytics';
 
 interface Message {
     role: 'user' | 'assistant';
@@ -69,6 +70,10 @@ export default function AppPage() {
     const [isGeneratingQuiz, setIsGeneratingQuiz] = useState(false);
     const [isSubmittingQuiz, setIsSubmittingQuiz] = useState(false);
     const [quizError, setQuizError] = useState('');
+
+    // Analytics State
+    const [progressData, setProgressData] = useState<ProgressResponse | null>(null);
+    const [isLoadingProgress, setIsLoadingProgress] = useState(false);
 
     const messagesEndRef = useRef<HTMLDivElement>(null);
 
@@ -474,6 +479,160 @@ export default function AppPage() {
         </div>
     );
 
+    // ── Analytics ───────────────────────────────────────────────────────
+    const fetchProgress = async () => {
+        setIsLoadingProgress(true);
+        try {
+            const data = await getProgress();
+            setProgressData(data);
+        } catch (err) {
+            console.error('Failed to fetch progress:', err);
+        } finally {
+            setIsLoadingProgress(false);
+        }
+    };
+
+    const renderAnalytics = () => {
+        // Fetch on first open
+        if (!progressData && !isLoadingProgress) {
+            fetchProgress();
+        }
+
+        if (isLoadingProgress) {
+            return (
+                <div className="app-content-view" style={{ alignItems: 'center', justifyContent: 'center' }}>
+                    <Loader2 size={40} className="spinning" />
+                    <p style={{ color: 'var(--text-secondary)' }}>Loading your progress...</p>
+                </div>
+            );
+        }
+
+        if (!progressData) {
+            return (
+                <div className="app-content-view">
+                    <p style={{ color: 'var(--text-secondary)' }}>No progress data available yet. Complete some quizzes first.</p>
+                </div>
+            );
+        }
+
+        const barData = progressData.topics.map(t => ({
+            topic: t.topic.length > 15 ? t.topic.substring(0, 15) + '...' : t.topic,
+            accuracy: Math.round(t.accuracy * 100),
+            attempts: t.attempts,
+        }));
+
+        const lineData = progressData.topics.map((t, i) => ({
+            name: `Quiz ${i + 1}`,
+            score: Math.round(t.accuracy * 100),
+        }));
+
+        return (
+            <div className="app-content-view">
+                <div className="content-header">
+                    <h1 className="content-title">Progress</h1>
+                    <p className="content-subtitle">Your learning analytics across all topics.</p>
+                </div>
+
+                {/* Charts Row */}
+                <div className="analytics-charts">
+                    <div className="chart-card">
+                        <h4 className="chart-title">Accuracy by Topic</h4>
+                        <ResponsiveContainer width="100%" height={280}>
+                            <BarChart data={barData} margin={{ top: 10, right: 10, left: -10, bottom: 30 }}>
+                                <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.08)" />
+                                <XAxis dataKey="topic" tick={{ fill: 'rgba(255,255,255,0.5)', fontSize: 11 }} angle={-30} textAnchor="end" />
+                                <YAxis tick={{ fill: 'rgba(255,255,255,0.5)', fontSize: 12 }} domain={[0, 100]} unit="%" />
+                                <Tooltip
+                                    contentStyle={{ background: '#1a1f36', border: '1px solid rgba(255,255,255,0.15)', borderRadius: 8, color: '#fff' }}
+                                    formatter={(value: any) => [`${value}%`, 'Accuracy']}
+                                />
+                                <Bar dataKey="accuracy" fill="#fbd34d" radius={[4, 4, 0, 0]} />
+                            </BarChart>
+                        </ResponsiveContainer>
+                    </div>
+
+                    <div className="chart-card">
+                        <h4 className="chart-title">Score Trend</h4>
+                        <ResponsiveContainer width="100%" height={280}>
+                            <LineChart data={lineData} margin={{ top: 10, right: 10, left: -10, bottom: 10 }}>
+                                <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.08)" />
+                                <XAxis dataKey="name" tick={{ fill: 'rgba(255,255,255,0.5)', fontSize: 12 }} />
+                                <YAxis tick={{ fill: 'rgba(255,255,255,0.5)', fontSize: 12 }} domain={[0, 100]} unit="%" />
+                                <Tooltip
+                                    contentStyle={{ background: '#1a1f36', border: '1px solid rgba(255,255,255,0.15)', borderRadius: 8, color: '#fff' }}
+                                    formatter={(value: any) => [`${value}%`, 'Score']}
+                                />
+                                <Line type="monotone" dataKey="score" stroke="#fbd34d" strokeWidth={2} dot={{ fill: '#fbd34d', r: 4 }} />
+                            </LineChart>
+                        </ResponsiveContainer>
+                    </div>
+                </div>
+
+                {/* Topic Lists */}
+                <div className="analytics-lists">
+                    <div className="analytics-list-card">
+                        <h4 className="list-card-title">
+                            <AlertTriangle size={18} style={{ color: '#e74c3c' }} />
+                            Weak Topics
+                        </h4>
+                        {progressData.weak_topics.length === 0 ? (
+                            <p className="list-empty">No weak topics identified yet.</p>
+                        ) : (
+                            progressData.weak_topics.map((t, i) => (
+                                <div key={i} className="topic-item weak">
+                                    <span className="topic-name">{t.topic}</span>
+                                    <div className="topic-stats">
+                                        <span className="topic-accuracy">{Math.round(t.accuracy * 100)}%</span>
+                                        <span className="topic-attempts">{t.attempts} attempts</span>
+                                    </div>
+                                </div>
+                            ))
+                        )}
+                    </div>
+
+                    <div className="analytics-list-card">
+                        <h4 className="list-card-title">
+                            <TrendingUp size={18} style={{ color: '#2ecc71' }} />
+                            Strong Topics
+                        </h4>
+                        {progressData.strong_topics.length === 0 ? (
+                            <p className="list-empty">No strong topics identified yet.</p>
+                        ) : (
+                            progressData.strong_topics.map((t, i) => (
+                                <div key={i} className="topic-item strong">
+                                    <span className="topic-name">{t.topic}</span>
+                                    <div className="topic-stats">
+                                        <span className="topic-accuracy">{Math.round(t.accuracy * 100)}%</span>
+                                        <span className="topic-attempts">{t.attempts} attempts</span>
+                                    </div>
+                                </div>
+                            ))
+                        )}
+                    </div>
+                </div>
+
+                {/* Recommendations */}
+                {progressData.recommendations.length > 0 && (
+                    <div className="analytics-list-card">
+                        <h4 className="list-card-title">
+                            <BookOpen size={18} style={{ color: 'var(--accent-color)' }} />
+                            Recommendations
+                        </h4>
+                        {progressData.recommendations.map((rec, i) => (
+                            <div key={i} className="recommendation-item">
+                                <span>{rec}</span>
+                            </div>
+                        ))}
+                    </div>
+                )}
+
+                <button className="primary-btn" onClick={fetchProgress} style={{ alignSelf: 'center' }}>
+                    Refresh Data
+                </button>
+            </div>
+        );
+    };
+
     return (
         <div className="product-layout">
             {/* Sidebar (ChatGPT Style Chat History) */}
@@ -551,6 +710,12 @@ export default function AppPage() {
                         >
                             Quizzes
                         </button>
+                        <button
+                            className={`top-tab ${activeTab === 'analytics' ? 'active' : ''}`}
+                            onClick={() => setActiveTab('analytics')}
+                        >
+                            Progress
+                        </button>
                     </div>
 
                     <div className="topbar-right">
@@ -562,6 +727,7 @@ export default function AppPage() {
                     {activeTab === 'chat' && renderChat()}
                     {activeTab === 'knowledge' && renderKnowledge()}
                     {activeTab === 'tests' && renderTests()}
+                    {activeTab === 'analytics' && renderAnalytics()}
                 </div>
             </main>
         </div>
