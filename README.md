@@ -1,6 +1,6 @@
 # KRISHNA: The AI-Powered Tutor
 
-![KRISHNA Hero Image](assets/ChatGPT%20Image%20Mar%208,%202026,%2010_34_44%20PM.png) *An advanced, context-aware AI Tutoring platform that adapts to your learning materials.*
+![KRISHNA Hero Image](assets/hero_image.png) *An advanced, context-aware AI Tutoring platform that adapts to your learning materials.*
 
 KRISHNA is an intelligent, full-stack educational application designed to act as your personalized tutor. Unlike generic AI chatbots, KRISHNA allows you to upload your own syllabus, notes, and study materials, creating an isolated knowledge base for every subject. It uses advanced Retrieval-Augmented Generation (RAG) to answer your questions, generates personalized MCQ quizzes to test your mastery, and tracks your progress over time through visual analytics.
 
