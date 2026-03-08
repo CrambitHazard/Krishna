@@ -119,7 +119,7 @@ PORT=8000
 
 # LLM Provider (OpenRouter)
 OPENROUTER_API_KEY=your_openrouter_api_key
-OPENROUTER_MODEL=openai/gpt-4o
+OPENROUTER_MODEL=arcee-ai/trinity-large-preview:free
 
 # AWS S3 Configuration
 AWS_ACCESS_KEY_ID=your_aws_access_key
