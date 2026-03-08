@@ -517,13 +517,13 @@ export default function AppPage() {
 
         const barData = progressData.topics.map(t => ({
             topic: t.topic.length > 15 ? t.topic.substring(0, 15) + '...' : t.topic,
-            accuracy: Math.round(t.accuracy * 100),
+            accuracy: Math.round(t.accuracy),
             attempts: t.attempts,
         }));
 
         const lineData = progressData.topics.map((t, i) => ({
             name: `Quiz ${i + 1}`,
-            score: Math.round(t.accuracy * 100),
+            score: Math.round(t.accuracy),
         }));
 
         return (
@@ -582,7 +582,7 @@ export default function AppPage() {
                                 <div key={i} className="topic-item weak">
                                     <span className="topic-name">{t.topic}</span>
                                     <div className="topic-stats">
-                                        <span className="topic-accuracy">{Math.round(t.accuracy * 100)}%</span>
+                                        <span className="topic-accuracy">{Math.round(t.accuracy)}%</span>
                                         <span className="topic-attempts">{t.attempts} attempts</span>
                                     </div>
                                 </div>
@@ -602,7 +602,7 @@ export default function AppPage() {
                                 <div key={i} className="topic-item strong">
                                     <span className="topic-name">{t.topic}</span>
                                     <div className="topic-stats">
-                                        <span className="topic-accuracy">{Math.round(t.accuracy * 100)}%</span>
+                                        <span className="topic-accuracy">{Math.round(t.accuracy)}%</span>
                                         <span className="topic-attempts">{t.attempts} attempts</span>
                                     </div>
                                 </div>

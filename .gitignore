@@ -72,3 +72,4 @@ dist-ssr/
 *.local
 npm-debug.log*
 smallfixes
+assets
