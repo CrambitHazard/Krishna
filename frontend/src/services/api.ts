@@ -2,7 +2,7 @@ import axios from 'axios';
 
 // Get EC2 IP or run local depending on .env
 // Defaults to the EC2 IP you provided
-const BASE_URL = import.meta.env.VITE_API_URL || 'http://54.210.23.55:8000/api/v1';
+const BASE_URL = import.meta.env.VITE_API_URL || 'http://54.87.11.124:8000/api/v1';
 
 const api = axios.create({
     baseURL: BASE_URL,
