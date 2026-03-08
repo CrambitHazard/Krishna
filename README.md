@@ -69,7 +69,7 @@ KRISHNA/
 
 - **Frontend:** React 18, TypeScript, Vite, Vanilla CSS (Custom Design System), Recharts (for analytics), Lucide React (for iconography)
 - **Backend:** Python 3.10+, FastAPI, Uvicorn, Pydantic (for strict data validation), Boto3 (AWS SDK)
-- **AI / LLM Integration:** OpenRouter API (Accessing premium models like GPT-4o and advanced reasoning models)
+- **AI / LLM Integration:** OpenRouter API
 - **Deployment & Infra (Configured):** AWS S3, local/remote Vector DB mappings
 
 ---
